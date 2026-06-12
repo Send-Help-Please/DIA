@@ -1,0 +1,9 @@
+**/*.yaml
+**/*.yml
+**/*.json
+
+node_modules
+src-tauri
+.vscode
+.husky
+public
