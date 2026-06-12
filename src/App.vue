@@ -1,3 +1,10 @@
+<script setup lang="ts">
+import Dashboard from './modules/dashboard/Dashboard.vue';
+
+</script>
+
 <template>
-  <h1>Hello World</h1>
+  <div class="min-h-svh bg-mist-900">
+    <Dashboard /> 
+  </div>
 </template>
