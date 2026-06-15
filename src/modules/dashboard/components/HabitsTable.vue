@@ -1,12 +1,20 @@
 <script setup lang="ts">
 import { Calendar, CircleDashed, ListChecks, Square } from '@lucide/vue';
 import { computed } from 'vue';
-import { Habit } from '../../../stores/useHabitsStore';
+import { Habit, Log } from '../../../stores/useHabitsStore';
+import { useIconComponent } from '../composables/useIconComponent';
 
 const props = defineProps<{
   habits: Habit[];
   currentDate: Date;
   type: 'week' | 'month';
+}>();
+
+const emit = defineEmits<{
+    toggle: [Date, string],
+    untoggle: [Log],
+    toggleAll: [Date, string[]],
+    untoggleAll: [Log[]]
 }>();
 
 function toDateKey(date: Date): string {
@@ -55,7 +63,7 @@ const dates = computed(() => {
 });
 
 const averages = computed(() => {
-  const result: Record<string, number> = {};
+  const result: Record<string, string> = {};
 
   for (const habit of props.habits) {
     const doneCount = dates.value.filter(date =>
@@ -64,7 +72,7 @@ const averages = computed(() => {
 
     const average = doneCount / dates.value.length;
 
-    result[habit.id] = Math.round(average * 100) / 100;
+    result[habit.id] = average.toFixed(2);
   }
 
   return result;
@@ -110,6 +118,57 @@ function datesAreSame(date1: Date, date2: Date): boolean {
     date1.getMonth() === date2.getMonth() && 
     date1.toLocaleString(undefined, { day: '2-digit' }) === date2.toLocaleString(undefined, { day: '2-digit' });
 }
+
+function getLogForDate(habit: Habit, date: Date): Log | undefined {
+  const dateKey = toDateKey(date);
+
+  return habit.logs.find(log => {
+    const logDate = typeof log.date === 'string'
+      ? new Date(log.date)
+      : log.date;
+
+    return toDateKey(logDate) === dateKey;
+  });
+}
+
+function toggle(date: Date, habit: Habit) {
+    emit('toggle', date, habit.id);
+}
+
+function untoggle(date: Date, habit: Habit) {
+  const log = getLogForDate(habit, date);
+
+  if (!log) return;
+
+  emit('untoggle', log);
+}
+
+function getLogsForDate(date: Date): Log[] {
+  return props.habits
+    .map(habit => getLogForDate(habit, date))
+    .filter((log): log is Log => !!log);
+}
+
+function isEveryHabitDoneForDate(date: Date): boolean {
+  if (props.habits.length === 0) return false;
+
+  return props.habits.every(habit => hasLogForDate(habit, date));
+}
+
+function toggleAllForDate(date: Date) {
+  const everyDone = isEveryHabitDoneForDate(date);
+
+  if (everyDone) {
+    emit('untoggleAll', getLogsForDate(date));
+    return;
+  }
+
+  const missingHabitIds = props.habits
+    .filter(habit => !hasLogForDate(habit, date))
+    .map(habit => habit.id);
+
+  emit('toggleAll', date, missingHabitIds);
+}
 </script>
 
 <template>
@@ -126,14 +185,14 @@ function datesAreSame(date1: Date, date2: Date): boolean {
                         <CircleDashed :size="20" /> Progress Bar
                     </div>
                 </th>
-                <th v-for="habit in habits" v-bind:key="habit.title" class="p-2 text-mist-400 font-normal">
-                    <div class="flex items-center justify-center">
-                        <component :is="habit.icon" :size="15" />
+                <th v-for="habit in habits" v-bind:key="habit.title" class="p-2 px-4 text-mist-400 font-normal">
+                    <div class="flex items-center justify-center" :title="habit.title">
+                        <component :is="useIconComponent(habit.icon).component" :size="20" />
                     </div>
                 </th>
-                <th class="p-2 text-mist-400 font-normal">
+                <th class="p-2 px-4 text-mist-400 font-normal">
                     <div class="flex items-center justify-center">
-                        <ListChecks :size="15" />
+                        <ListChecks :size="20" />
                     </div>
                 </th>
             </tr>
@@ -157,14 +216,18 @@ function datesAreSame(date1: Date, date2: Date): boolean {
                         {{ progresses[date.getTime()] }}%
                     </div>
                 </td>
-                <td v-for="habit in habits" v-bind:key="habit.title" class="border-r border-mist-700 p-2">
+                <td v-for="habit in habits" v-bind:key="habit.id" class="border-r border-mist-700 p-2">
                     <div class="flex items-center justify-center">
-                        <button class="cursor-pointer w-4 h-4 rounded-sm border border-mist-400 bg-none" :class="hasLogForDate(habit, date) ? 'bg-mist-400' : ''" />
+                        <button @click="hasLogForDate(habit, date) ? untoggle(date, habit) : toggle(date, habit)" class="cursor-pointer w-4 h-4 rounded-sm border border-mist-400 bg-none" :class="hasLogForDate(habit, date) ? 'bg-mist-400' : ''" />
                     </div>
                 </td>
                 <td>
                     <div class="flex items-center justify-center">
-                        <button class="cursor-pointer w-4 h-4 rounded-sm border border-mist-400 bg-none" />
+                        <button
+                            class="cursor-pointer w-4 h-4 rounded-sm border border-mist-400 bg-none"
+                            :class="isEveryHabitDoneForDate(date) ? 'bg-mist-400' : ''"
+                            @click="toggleAllForDate(date)"
+                        />
                     </div>
                 </td>
             </tr>

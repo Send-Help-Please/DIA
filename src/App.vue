@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import Dashboard from './modules/dashboard/Dashboard.vue';
+import { RouterView } from 'vue-router';
+import Modal from './components/Modal.vue';
 
 </script>
 
 <template>
-  <div class="min-h-svh bg-mist-900">
-    <Dashboard /> 
+  <div class="min-h-svh bg-mist-900 relative">
+    <RouterView />
+    <Modal />
   </div>
 </template>

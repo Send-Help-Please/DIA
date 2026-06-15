@@ -1,4 +1,3 @@
-import { Ban, Bed, CalendarDays, Droplet, LucideIcon, Utensils } from "@lucide/vue";
 import { defineStore } from "pinia";
 import { ref } from "vue";
 
@@ -11,7 +10,7 @@ export type Log = {
 export type Habit = {
   id: string;
   title: string;
-  icon: LucideIcon;
+  icon: string;
   logs: Log[];
 };
 
@@ -23,12 +22,16 @@ const daysAgo = (days: number) => {
   return date;
 };
 
+const generateId = (type: 'habit' | 'log') => {
+    return `${type}-${Math.floor(Math.random() * 10000)}`;
+}
+
 export const useHabitsStore = defineStore('habits', () => {
     const habits = ref<Habit[]>(
         [
             {
                 id: "habit-1",
-                icon: Bed,
+                icon: "bed",
                 title: "Sleep 7-8 hours",
                 logs: [
                 { id: "log-1", habitId: "habit-1", date: daysAgo(0) },
@@ -40,7 +43,7 @@ export const useHabitsStore = defineStore('habits', () => {
             },
             {
                 id: "habit-2",
-                icon: Utensils,
+                icon: "utensils",
                 title: "Eat healthy meals",
                 logs: [
                 { id: "log-6", habitId: "habit-2", date: daysAgo(0) },
@@ -51,7 +54,7 @@ export const useHabitsStore = defineStore('habits', () => {
             },
             {
                 id: "habit-3",
-                icon: Ban,
+                icon: "ban",
                 title: "No porn/alcohol",
                 logs: [
                 { id: "log-10", habitId: "habit-3", date: daysAgo(0) },
@@ -65,7 +68,7 @@ export const useHabitsStore = defineStore('habits', () => {
             },
             {
                 id: "habit-4",
-                icon: Droplet,
+                icon: "droplet",
                 title: "Drink 2L water",
                 logs: [
                 { id: "log-17", habitId: "habit-4", date: daysAgo(0) },
@@ -76,7 +79,7 @@ export const useHabitsStore = defineStore('habits', () => {
             },
             {
                 id: "habit-5",
-                icon: CalendarDays,
+                icon: "calendar-days",
                 title: "Plan tomorrow",
                 logs: [
                 { id: "log-21", habitId: "habit-5", date: daysAgo(0) },
@@ -86,7 +89,7 @@ export const useHabitsStore = defineStore('habits', () => {
             },
             {
                 id: "habit-6",
-                icon: Bed,
+                icon: "bed",
                 title: "Wake up before 7 AM",
                 logs: [
                 { id: "log-24", habitId: "habit-6", date: daysAgo(1) },
@@ -96,7 +99,7 @@ export const useHabitsStore = defineStore('habits', () => {
             },
             {
                 id: "habit-7",
-                icon: Utensils,
+                icon: "utensils",
                 title: "No junk food",
                 logs: [
                 { id: "log-27", habitId: "habit-7", date: daysAgo(0) },
@@ -107,7 +110,7 @@ export const useHabitsStore = defineStore('habits', () => {
             },
             {
                 id: "habit-8",
-                icon: Droplet,
+                icon: "droplet",
                 title: "Take vitamins",
                 logs: [
                 { id: "log-31", habitId: "habit-8", date: daysAgo(0) },
@@ -120,19 +123,26 @@ export const useHabitsStore = defineStore('habits', () => {
         ]
     );
 
-    const addHabit = (habit: Habit) => {
-        habits.value.push(habit);
+    const addHabit = (habit: Omit<Habit, 'id' | 'logs'>) => {
+        habits.value.push({ ...habit, id: generateId('habit'), logs: [] });
     }
 
     const removeHabit = (habit: Habit) => {
         habits.value = habits.value.filter(curr => curr.id !== habit.id);
     }
 
-    const addLog = (log: Log) => {
+    const updateHabit = (habit: Habit) => {
+        const i = habits.value.findIndex(curr => curr.id === habit.id);
+        if(i < 0) return;
+
+        habits.value[i] = habit;
+    }
+
+    const addLog = (log: Omit<Log, 'id'>) => {
         const i = habits.value.findIndex(habit => habit.id === log.habitId);
         if(i < 0) throw new Error(`No habit with id: ${log.habitId}`);
 
-        habits.value[i].logs.push(log);
+        habits.value[i].logs.push({ ...log, id: generateId('log') });
     }
 
     const removeLog = (log: Log) => {
@@ -147,6 +157,8 @@ export const useHabitsStore = defineStore('habits', () => {
 
         addHabit,
         removeHabit,
+        updateHabit,
+
         addLog,
         removeLog
     }
