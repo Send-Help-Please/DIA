@@ -15,6 +15,7 @@ const props = defineProps<{
   habits: Habit[];
   currentDate: Date;
   type: 'week' | 'month';
+  today: Date;
 }>();
 
 const emit = defineEmits<{
@@ -22,6 +23,7 @@ const emit = defineEmits<{
   untoggle: [Log];
   toggleAll: [Date, string[]];
   untoggleAll: [Log[]];
+  selectDay: [Date];
 }>();
 
 const { dates, averages, progresses } = useHabitLogTable(
@@ -44,6 +46,10 @@ function emitToggleAll(date: Date, habitIds: string[]) {
 
 function emitUntoggleAll(logs: Log[]) {
   emit('untoggleAll', logs)
+}
+
+function emitSelectDay(date: Date) {
+  emit('selectDay', date);
 }
 </script>
 
@@ -88,10 +94,12 @@ function emitUntoggleAll(logs: Log[]) {
         :date="date"
         :habits="habits"
         :progress="progresses[toDateKey(date)]"
+        :today="today"
         @toggle="emitToggle"
         @untoggle="emitUntoggle"
         @toggle-all="emitToggleAll"
         @untoggle-all="emitUntoggleAll"
+        @select-day="emitSelectDay"
       />
 
       <tr>

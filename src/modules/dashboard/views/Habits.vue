@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Check, List, Plus, X } from '@lucide/vue';
+import { List, Plus, X } from '@lucide/vue';
 import Section from '../../../components/Section.vue';
 import HeaderText from '../components/HeaderText.vue';
 import GuideText from '../components/GuideText.vue';
@@ -78,7 +78,7 @@ async function changeIcon() {
                     <List /> Habit List
                 </HeaderText>
 
-                <button @click="creating ? cancelEdit : startEdit" class="cursor-pointer opacity-70 hover:opacity-100 transition-opacity">
+                <button @click="creating ? cancelEdit() : startEdit()" class="cursor-pointer opacity-70 hover:opacity-100 transition-opacity">
                     <X v-if="creating" />
                     <Plus v-else />
                 </button>
@@ -99,18 +99,11 @@ async function changeIcon() {
                     <div class="flex gap-4 items-center">
                     <button
                         type="button"
-                        class="text-green-600 font-bold cursor-pointer"
+                        class="cursor-pointer opacity-70 hover:opacity-100 transition-opacity"
                         :disabled="!!error"
                         @click="saveEdit({ title: draftTitle, icon: draftIcon })"
                     >
-                        <Check />
-                    </button>
-                    <button
-                        type="button"
-                        class="text-red-600 font-bold cursor-pointer"
-                        @click="cancelEdit"
-                    >
-                        <X />
+                        Add
                     </button>
                     </div>
 

@@ -5,7 +5,7 @@ import Modal from './components/Modal.vue';
 </script>
 
 <template>
-  <div class="min-h-svh bg-mist-900 relative">
+  <div class="min-h-svh bg-mist-900 relative overflow-x-hidden">
     <RouterView />
     <Modal />
   </div>
