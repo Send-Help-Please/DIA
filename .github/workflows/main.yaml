@@ -5,7 +5,7 @@ on:
     branches: ["main", "dashboard", "dev"]
 
 jobs:
-  build:
+  build-and-security-scan:
     runs-on: ubuntu-24.04
     
     permissions:
@@ -28,6 +28,19 @@ jobs:
 
     - name: Run linter
       run: npm run lint
+      
+    - name: Run Semgrep SAST Scan
+      run: |
+        docker run --rm -v "${{ github.workspace }}:/src" returntocorp/semgrep \
+        semgrep scan --config=auto --sarif --output=semgrep-results.sarif /src
+      continue-on-error: true 
+  
+    - name: Upload Semgrep results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'semgrep-results.sarif'
+        category: 'semgrep-sast'
 
     - name: Build the application
       run: npm run build --if-present
