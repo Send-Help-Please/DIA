@@ -1,8 +1,8 @@
-name: Build CI
+name: Build and SCA CI
 
 on:
   push:
-    branches: ["main", "dev"]
+    branches: ["main", "dashboard", "dev"]
 
 jobs:
   build:
@@ -23,3 +23,21 @@ jobs:
 
     - name: Run linter
       run: npm run lint
+
+    - name: Build the application
+      run: npm run build --if-present
+
+    - name: SCA Scan
+      uses: aquasecurity/trivy-action@v0.28.0
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always() 
+      with:
+        sarif_file: 'trivy-results.sarif'
