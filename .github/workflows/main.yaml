@@ -28,7 +28,7 @@ jobs:
       run: npm run build --if-present
 
     - name: SCA Scan
-      uses: aquasecurity/trivy-action@v0.28.0
+      uses: aquasecurity/trivy-action@v0.36.0
       with:
         scan-type: 'fs'
         scan-ref: '.'
