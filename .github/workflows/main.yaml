@@ -1,0 +1,61 @@
+name: Build and SCA CI
+
+on:
+  push:
+    branches: ["main", "dashboard", "dev"]
+
+jobs:
+  build-and-security-scan:
+    runs-on: ubuntu-24.04
+    
+    permissions:
+      contents: read           
+      security-events: write   
+      actions: read    
+
+    steps:
+    - name: Checkout the code
+      uses: actions/checkout@v6.0.3
+
+    - name: Setup Node.js environment
+      uses: actions/setup-node@v6.4.0
+      with:
+        node-version: "lts/*"
+        cache: "npm"
+
+    - name: Install dependencies
+      run: npm install
+
+    - name: Run linter
+      run: npm run lint
+      
+    - name: Run Semgrep SAST Scan
+      run: |
+        docker run --rm -v "${{ github.workspace }}:/src" returntocorp/semgrep \
+        semgrep scan --config=auto --sarif --output=semgrep-results.sarif /src
+      continue-on-error: true 
+  
+    - name: Upload Semgrep results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always()
+      with:
+        sarif_file: 'semgrep-results.sarif'
+        category: 'semgrep-sast'
+
+    - name: Build the application
+      run: npm run build --if-present
+
+    - name: SCA Scan
+      uses: aquasecurity/trivy-action@v0.36.0
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+        severity: 'CRITICAL,HIGH'
+
+    - name: Upload Trivy scan results to GitHub Security tab
+      uses: github/codeql-action/upload-sarif@v3
+      if: always() 
+      with:
+        sarif_file: 'trivy-results.sarif'
