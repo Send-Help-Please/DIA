@@ -1,5 +1,5 @@
-import { defineStore } from "pinia";
-import { ref } from "vue";
+import { defineStore } from 'pinia';
+import { ref } from 'vue';
 
 export const useProfileStore = defineStore('profile', () => {
     const id = ref<string>();
@@ -15,6 +15,6 @@ export const useProfileStore = defineStore('profile', () => {
         timezone,
         weekStartsOn,
         createdAt,
-        updatedAt
-    }
+        updatedAt,
+    };
 });

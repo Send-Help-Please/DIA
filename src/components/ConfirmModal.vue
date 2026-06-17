@@ -1,53 +1,52 @@
 <script setup lang="ts">
 import BaseModal from './BaseModal.vue';
+import Button from './Button.vue';
 
 defineProps<{
-  open: boolean;
-  title: string;
-  message?: string;
-  confirmButton?: {
-    text?: string;
-    danger?: boolean;
-  }
-  cancelButton?: {
-    text?: string;
-    danger?: boolean;
-  };
+    open: boolean;
+    title: string;
+    message?: string;
+    confirmButton?: {
+        text?: string;
+        danger?: boolean;
+    };
+    cancelButton?: {
+        text?: string;
+        danger?: boolean;
+    };
 }>();
 
 const emit = defineEmits<{
-  confirm: [];
-  cancel: [];
+    confirm: [];
+    cancel: [];
 }>();
 </script>
 
 <template>
-  <BaseModal
-    :open="open"
-    :title="title"
-    @close="emit('cancel')"
-  >
-    <p v-if="message" class="text-sm opacity-80">
-      {{ message }}
-    </p>
+    <BaseModal :open="open" :title="title" @close="emit('cancel')">
+        <p v-if="message" class="text-md">
+            {{ message }}
+        </p>
 
-    <template #footer>
-      <button
-        type="button"
-        class="rounded-md border px-3 py-2 text-sm cursor-pointer opacity-70 hover:opacity-100 transition-opacity"
-        @click="emit('cancel')"
-      >
-        {{ cancelButton?.text ?? 'Cancel' }}
-      </button>
+        <template #footer>
+            <Button
+                class="rounded-md border px-4 py-2 text-sm"
+                @click="emit('cancel')"
+            >
+                {{ cancelButton?.text ?? 'Cancel' }}
+            </Button>
 
-      <button
-        type="button"
-        class="rounded-md border px-3 py-2 text-sm cursor-pointer opacity-70 hover:opacity-100 transition-opacity"
-        :class="confirmButton?.danger ? 'bg-red-900 text-white border-red-900' : ''"
-        @click="emit('confirm')"
-      >
-        {{ confirmButton?.text ?? 'Confirm' }}
-      </button>
-    </template>
-  </BaseModal>
+            <Button
+                class="rounded-md border px-4 py-2 text-sm"
+                :class="
+                    confirmButton?.danger
+                        ? 'bg-error text-header border-error'
+                        : ''
+                "
+                @click="emit('confirm')"
+            >
+                {{ confirmButton?.text ?? 'Confirm' }}
+            </Button>
+        </template>
+    </BaseModal>
 </template>

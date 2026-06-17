@@ -1,135 +1,71 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
-import { Check, X, Trash } from '@lucide/vue';
-import { Habit } from '../../../stores/useHabitsStore';
-import { useIconComponent } from '../composables/useIconComponent.ts';
-import { useModal } from '../../../composables/useModal.ts';
+import { Trash } from '@lucide/vue';
+import { useModal } from '@/composables/useModal.ts';
+import Button from '@/components/Button.vue';
+import { Habit } from '@/types/Habit.ts';
+import HabitForm from './HabitForm.vue';
 
 const props = defineProps<{
-  habit: Habit;
-  editing: boolean;
-  validateTitle: (id: string, title: string) => string;
+    habit: Habit;
+    editing: boolean;
+    validateTitle: (id: string, title: string) => string;
 }>();
 
 const emit = defineEmits<{
-  startEdit: [];
-  cancelEdit: [];
-  updateHabit: [habit: Habit];
-  deleteHabit: [habit: Habit];
+    startEdit: [];
+    cancelEdit: [];
+    updateHabit: [habit: Habit];
+    deleteHabit: [habit: Habit];
 }>();
 
-const draftTitle = ref('');
-const draftIcon = ref('');
+const { confirm } = useModal();
 
-const { pickIcon, confirm } = useModal();
-
-const error = computed(() =>
-  props.editing ? props.validateTitle(props.habit.id, draftTitle.value) : ''
-);
-
-watch(
-  () => props.editing,
-  editing => {
-    if (editing) {
-      draftTitle.value = props.habit.title;
-      draftIcon.value = props.habit.icon;
-    } else {
-      draftTitle.value = '';
-      draftIcon.value = '';
-    }
-  },
-  { immediate: true }
-);
-
-function saveEdit() {
-  if (error.value) return;
-
-  emit('updateHabit', {
-    ...props.habit,
-    title: draftTitle.value.trim(),
-    icon: draftIcon.value || props.habit.icon,
-  });
-
-  emit('cancelEdit');
+function validateEditTitle(title: string): string {
+    return props.validateTitle(props.habit.id, title);
 }
 
-async function changeIcon() {
-  const icon = await pickIcon(draftIcon.value);
-  if (icon) draftIcon.value = icon;
+function saveEdit(payload: { title: string; icon: string }) {
+    emit('updateHabit', {
+        ...props.habit,
+        ...payload,
+    });
+
+    emit('cancelEdit');
 }
 
 async function deleteHabit() {
-  const ok = await confirm({
-    title: 'Delete Habit',
-    message: 'Are you sure you want to delete this habit? This action cannot be reversed',
-    confirmButton: {
-      text: 'Delete',
-      danger: true,
-    },
-  });
+    const ok = await confirm({
+        title: 'Delete Habit',
+        message:
+            'Are you sure you want to delete this habit? This action cannot be reversed',
+        confirmButton: {
+            text: 'Delete',
+            danger: true,
+        },
+    });
 
-  if (ok) emit('deleteHabit', props.habit);
+    if (ok) emit('deleteHabit', props.habit);
 }
 </script>
 
 <template>
-  <li class="my-4">
-    <div v-if="editing" class="flex flex-col gap-1">
-      <div class="flex flex-col gap-4">
-        <input
-          v-model="draftTitle"
-          class="border rounded px-2 py-1"
-          autofocus
-          @keyup.enter="saveEdit"
-          @keyup.esc="emit('cancelEdit')"
+    <li class="my-4">
+        <HabitForm
+            v-if="editing"
+            submit-text="Save"
+            :title="habit.title"
+            :icon="habit.icon"
+            :validate="validateEditTitle"
+            @submit="saveEdit"
+            @cancel="emit('cancelEdit')"
         />
 
-        <div class="flex gap-4 items-center justify-between">
-          <div class="flex gap-4 items-center">
-            <button
-              type="button"
-              class="text-green-600 font-bold cursor-pointer disabled:opacity-50"
-              :disabled="!!error"
-              @click="saveEdit"
-            >
-              <Check />
-            </button>
+        <div v-else class="flex justify-between items-center">
+            <Button @click="emit('startEdit')">{{ habit.title }}</Button>
 
-            <button
-              type="button"
-              class="text-red-600 font-bold cursor-pointer"
-              @click="emit('cancelEdit')"
-            >
-              <X />
-            </button>
-          </div>
-
-          <button type="button" class="cursor-pointer" @click="changeIcon">
-            <component
-              :is="useIconComponent(draftIcon || habit.icon).component"
-              :size="20"
-            />
-          </button>
+            <Button @click="deleteHabit">
+                <Trash :size="20" class="text-error" />
+            </Button>
         </div>
-      </div>
-
-      <p v-if="error" class="text-sm text-red-600">
-        {{ error }}
-      </p>
-    </div>
-
-    <div v-else class="flex justify-between items-center">
-      <button type="button" class="text-left cursor-pointer" @click="emit('startEdit')">
-        {{ habit.title }}
-      </button>
-
-      <button
-        type="button"
-        class="cursor-pointer opacity-70 hover:opacity-100 transition-opacity"
-        @click="deleteHabit"
-      >
-        <Trash :size="20" class="text-red-600" />
-      </button>
-    </div>
-  </li>
+    </li>
 </template>

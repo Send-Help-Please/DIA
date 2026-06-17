@@ -6,12 +6,12 @@
 
 <style lang="css" scoped>
 #motivational-text::before {
-    content: "";
+    content: '';
     width: 4px;
     height: 100%;
     position: absolute;
     left: 0;
     bottom: 0;
-    background-color: white;
+    background-color: var(--color-header);
 }
 </style>

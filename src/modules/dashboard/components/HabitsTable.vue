@@ -1,121 +1,114 @@
 <script setup lang="ts">
 import { Calendar, CircleDashed, ListChecks } from '@lucide/vue';
 import { toRef } from 'vue';
-import { Habit, Log } from '../../../stores/useHabitsStore';
 import { useIconComponent } from '../composables/useIconComponent';
-import {
-  toDateKey,
-  useHabitLogTable,
-} from '../composables/useHabitTable';
+import { useHabitLogTable } from '../composables/useHabitTable';
 
 import HabitLogRow from './HabitLogRow.vue';
 import HabitTableHeader from './HabitTableHeader.vue';
+import { Habit } from '@/types/Habit.ts';
+import { Log } from '@/types/Log.ts';
+import { dateToKey } from '../utils/dateUtils.ts';
 
 const props = defineProps<{
-  habits: Habit[];
-  currentDate: Date;
-  type: 'week' | 'month';
-  today: Date;
+    habits: Habit[];
+    currentDate: Date;
+    type: 'week' | 'month';
+    today: Date;
 }>();
 
 const emit = defineEmits<{
-  toggle: [Date, string];
-  untoggle: [Log];
-  toggleAll: [Date, string[]];
-  untoggleAll: [Log[]];
-  selectDay: [Date];
+    toggle: [Date, string];
+    untoggle: [Log];
+    toggleAll: [Date, string[]];
+    untoggleAll: [Log[]];
+    selectDay: [Date];
 }>();
 
 const { dates, averages, progresses } = useHabitLogTable(
-  toRef(props, 'habits'),
-  toRef(props, 'currentDate'),
-  toRef(props, 'type')
+    toRef(props, 'habits'),
+    toRef(props, 'currentDate'),
+    toRef(props, 'type'),
 );
 
 function emitToggle(date: Date, habitId: string) {
-  emit('toggle', date, habitId);
+    emit('toggle', date, habitId);
 }
 
 function emitUntoggle(log: Log) {
-  emit("untoggle", log)
+    emit('untoggle', log);
 }
 
 function emitToggleAll(date: Date, habitIds: string[]) {
-  emit('toggleAll', date, habitIds);
+    emit('toggleAll', date, habitIds);
 }
 
 function emitUntoggleAll(logs: Log[]) {
-  emit('untoggleAll', logs)
+    emit('untoggleAll', logs);
 }
 
 function emitSelectDay(date: Date) {
-  emit('selectDay', date);
+    emit('selectDay', date);
 }
 </script>
 
 <template>
-  <table>
-    <thead>
-      <tr>
-        <th>
-          <HabitTableHeader class="flex items-center gap-2">
-            <Calendar :size="20" /> Date
-          </HabitTableHeader>
-        </th>
+    <table class="text-text">
+        <thead>
+            <tr>
+                <HabitTableHeader type="withIcon">
+                    <Calendar :size="20" /> Date
+                </HabitTableHeader>
 
-        <th>
-          <HabitTableHeader class="flex items-center gap-2">
-            <CircleDashed :size="20" /> Progress Bar
-          </HabitTableHeader>
-        </th>
+                <HabitTableHeader type="withIcon">
+                    <CircleDashed :size="20" /> Progress Bar
+                </HabitTableHeader>
 
-        <th
-          v-for="habit in habits"
-          :key="habit.id"
-          class="p-2 px-4 text-mist-400 font-normal"
-        >
-          <div class="flex items-center justify-center" :title="habit.title">
-            <component :is="useIconComponent(habit.icon).component" :size="20" />
-          </div>
-        </th>
+                <HabitTableHeader
+                    v-for="habit in habits"
+                    :key="habit.id"
+                    :title="habit.title"
+                    type="iconOnly"
+                >
+                    <component
+                        :is="useIconComponent(habit.icon).component"
+                        :size="20"
+                    />
+                </HabitTableHeader>
 
-        <th class="p-2 px-4 text-mist-400 font-normal">
-          <div class="flex items-center justify-center">
-            <ListChecks :size="20" />
-          </div>
-        </th>
-      </tr>
-    </thead>
+                <HabitTableHeader type="iconOnly">
+                    <ListChecks :size="20" />
+                </HabitTableHeader>
+            </tr>
+        </thead>
 
-    <tbody>
-      <HabitLogRow
-        v-for="date in dates"
-        :key="toDateKey(date)"
-        :date="date"
-        :habits="habits"
-        :progress="progresses[toDateKey(date)]"
-        :today="today"
-        @toggle="emitToggle"
-        @untoggle="emitUntoggle"
-        @toggle-all="emitToggleAll"
-        @untoggle-all="emitUntoggleAll"
-        @select-day="emitSelectDay"
-      />
+        <tbody>
+            <HabitLogRow
+                v-for="date in dates"
+                :key="dateToKey(date)"
+                :date="date"
+                :habits="habits"
+                :progress="progresses[dateToKey(date)]"
+                :today="today"
+                @toggle="emitToggle"
+                @untoggle="emitUntoggle"
+                @toggle-all="emitToggleAll"
+                @untoggle-all="emitUntoggleAll"
+                @select-day="emitSelectDay"
+            />
 
-      <tr>
-        <td></td>
-        <td class="text-mist-400 text-right text-sm font-bold p-2">
-          Average
-        </td>
+            <tr>
+                <td></td>
+                <td class="text-right text-sm font-bold p-2">Average</td>
 
-        <td
-          v-for="habit in habits"
-          :key="habit.id"
-          class="text-mist-400 text-center p-2"
-        >
-          {{ averages[habit.id] }}
-        </td>
-      </tr>
-    </tbody>
-  </table>
+                <td
+                    v-for="habit in habits"
+                    :key="habit.id"
+                    class="text-center p-2"
+                >
+                    {{ averages[habit.id] }}
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </template>

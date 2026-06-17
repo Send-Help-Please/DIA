@@ -1,12 +1,15 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import Section from '../../components/Section.vue';
-import { useHabitsStore } from '../../stores/useHabitsStore.ts';
+import Section from '@/components/Section.vue';
+import { useHabitsStore } from '@/stores/useHabitsStore.ts';
 import Habits from './views/Habits.vue';
 import Progress from './views/Progress.vue';
 import DayDetails from './views/DayDetails.vue';
+import { useNotesStore } from '@/stores/useNotesStore.ts';
+import { getNoteForDate } from './utils/noteUtils.ts';
 
 const habitsStore = useHabitsStore();
+const notesStore = useNotesStore();
 
 const today = ref(new Date());
 const selectedDay = ref<Date | null>(null);
@@ -22,22 +25,22 @@ function closeDayDetails() {
 
 <template>
     <div>
-        <Section class="grid grid-cols-4 gap-12 p-16">    
-            <Habits 
-                class="col-span-1" 
-                :habits="habitsStore.habits" 
-                :update-habit="habitsStore.updateHabit" 
-                :save-habit="habitsStore.addHabit" 
-                :delete-habit="habitsStore.removeHabit" 
+        <Section class="grid grid-cols-4 gap-12 p-16">
+            <Habits
+                class="col-span-1"
+                :habits="habitsStore.habits"
+                :update-habit="habitsStore.updateHabit"
+                :save-habit="habitsStore.addHabit"
+                :delete-habit="habitsStore.removeHabit"
             />
 
-            <Progress 
-                class="col-span-3" 
-                :habits="habitsStore.habits" 
-                :today="today" 
-                :add-log="habitsStore.addLog" 
+            <Progress
+                class="col-span-3"
+                :habits="habitsStore.habits"
+                :today="today"
+                :add-log="habitsStore.addLog"
                 :remove-log="habitsStore.removeLog"
-                @select-day="handleSelectDay" 
+                @select-day="handleSelectDay"
             />
         </Section>
 
@@ -55,6 +58,9 @@ function closeDayDetails() {
                 class="fixed top-0 right-0 h-screen w-[420px] z-50 shadow-2xl"
                 :day="selectedDay"
                 :habits="habitsStore.habits"
+                :add-log="habitsStore.addLog"
+                :remove-log="habitsStore.removeLog"
+                :note="getNoteForDate(today, notesStore.notes)"
             />
         </Transition>
     </div>
@@ -63,7 +69,9 @@ function closeDayDetails() {
 <style scoped>
 .slide-panel-enter-active,
 .slide-panel-leave-active {
-    transition: transform 0.25s ease, opacity 0.25s ease;
+    transition:
+        transform 0.25s ease,
+        opacity 0.25s ease;
 }
 
 .slide-panel-enter-from,

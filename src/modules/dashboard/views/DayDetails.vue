@@ -1,55 +1,62 @@
 <script setup lang="ts">
-import { computed } from 'vue'
 import HabitProgressBar from '../components/HabitProgressBar.vue';
-import { Habit } from '../../../stores/useHabitsStore';
 import { useIconComponent } from '../composables/useIconComponent.ts';
+import HeaderText from '../components/HeaderText.vue';
+import { Habit } from '@/types/Habit.ts';
+import { getFormattedDate, getWeekDay } from '../utils/dateUtils.ts';
+import { getProgressForDate } from '../utils/statUtils.ts';
+import HabitCheckCell from '../components/HabitCheckCell.vue';
+import { getLogForDate, hasLogForDate } from '../utils/logUtils.ts';
+import { Log } from '@/types/Log.ts';
+import { Note } from '@/types/Note.ts';
+import { useDateNote } from '../composables/useDateNote.ts';
 
 const props = defineProps<{
-    day: Date,
-    habits: Habit[]
-}>()
-
-defineEmits<{
-    close: []
+    day: Date;
+    habits: Habit[];
+    note?: Note;
+    addLog: (log: Omit<Log, 'id'>) => void;
+    removeLog: (log: Log) => void;
 }>();
 
-function getFormattedDate(date: Date): string {
-  return date.toLocaleDateString(undefined, {
-    year: 'numeric',
-    month: 'long',
-    day: '2-digit',
-  });
-}
+defineEmits<{
+    close: [];
+}>();
 
-const weekday = computed(() => {
-    return props.day.toLocaleString('en-US', { weekday: 'long' })
-});
+const { draftNote } = useDateNote(() => props.day);
+
+function toggleHabit(habit: Habit) {
+    const log = getLogForDate(habit, props.day);
+
+    if (log) {
+        props.removeLog(log);
+        return;
+    }
+
+    props.addLog({ date: props.day, habitId: habit.id });
+}
 </script>
 
 <template>
-    <div class="bg-mist-900 border border-mist-700 rounded-md p-16 text-white w-96">
+    <div class="bg-card-bg border border-card-border rounded-md p-16 w-96">
         <div class="mb-6">
-            <h2 class="text-3xl font-bold">
+            <HeaderText>
                 {{ getFormattedDate(day) }}
-            </h2>
+            </HeaderText>
 
-            <p class="text-mist-400 mt-1">
-                {{ weekday }}
+            <p class="mt-1">
+                {{ getWeekDay(day) }}
             </p>
         </div>
 
         <div class="mb-6">
-            <p class="text-sm text-mist-400 mb-2">
-                Progress
-            </p>
+            <p class="text-sm mb-2">Progress</p>
 
-            <HabitProgressBar :progress="76" />
+            <HabitProgressBar :progress="getProgressForDate(day, habits)" />
         </div>
 
         <div class="mb-6">
-            <p class="text-sm text-mist-400 mb-3">
-                Habits
-            </p>
+            <p class="text-sm mb-3">Habits</p>
 
             <div class="flex flex-col gap-3">
                 <label
@@ -57,11 +64,16 @@ const weekday = computed(() => {
                     :key="habit.id"
                     class="flex items-center justify-between text-sm"
                 >
-                    <span class="flex items-center gap-2"><component :is="useIconComponent(habit.icon).component" /> {{  habit.title }}</span>
+                    <span class="flex items-center gap-2"
+                        ><component
+                            :is="useIconComponent(habit.icon).component"
+                        />
+                        {{ habit.title }}</span
+                    >
 
-                    <input
-                        type="checkbox"
-                        class="size-4 rounded border-mist-600 bg-mist-800"
+                    <HabitCheckCell
+                        :checked="hasLogForDate(habit, day)"
+                        @toggle="toggleHabit(habit)"
                     />
                 </label>
             </div>
@@ -71,8 +83,9 @@ const weekday = computed(() => {
 
         <div>
             <textarea
+                v-model="draftNote"
                 placeholder="Add your notes here"
-                class="w-full resize-none mt-4 bg-transparent text-sm text-white placeholder:text-mist-500 outline-none min-h-24"
+                class="w-full resize-none mt-4 bg-transparent text-sm text-header placeholder:text-text outline-none min-h-24"
             />
         </div>
     </div>

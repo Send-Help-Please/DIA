@@ -1,21 +1,21 @@
 <script setup lang="ts">
+import Button from '@/components/Button.vue';
+
 defineProps<{
-  checked: boolean;
+    checked: boolean;
 }>();
 
 const emit = defineEmits<{
-  toggle: [];
+    toggle: [];
 }>();
 </script>
 
 <template>
-  <td class="border-r border-mist-700 p-2">
     <div class="flex items-center justify-center">
-      <button
-        class="cursor-pointer w-4 h-4 rounded-sm border border-mist-400 bg-none"
-        :class="checked ? 'bg-mist-400' : ''"
-        @click="emit('toggle')"
-      />
+        <Button
+            class="w-4 h-4 rounded-sm border border-text bg-none"
+            :class="checked ? 'bg-text' : ''"
+            @click="emit('toggle')"
+        />
     </div>
-  </td>
 </template>
