@@ -7,12 +7,14 @@ import { ref } from 'vue';
 import Button from '@/components/Button.vue';
 import { Habit } from '@/types/Habit.ts';
 import { Log } from '@/types/Log.ts';
+import SelectInput from '@/components/SelectInput.vue';
 
 const props = defineProps<{
     habits: Habit[];
+    logs: Log[];
     today: Date;
-    addLog: (log: Omit<Log, 'id'>) => void;
-    removeLog: (log: Log) => void;
+    addLog: (log: Omit<Log, 'id'>) => Promise<void>;
+    removeLog: (log: Log) => Promise<void>;
 }>();
 
 const emit = defineEmits<{
@@ -21,23 +23,23 @@ const emit = defineEmits<{
 
 const type = ref<'week' | 'month'>('week');
 
-function handleToggle(date: Date, habitId: string) {
-    props.addLog({ date, habitId });
+async function handleToggle(date: Date, habitId: string) {
+    await props.addLog({ logDate: date, habitId });
 }
 
-function handleUntoggle(log: Log) {
-    props.removeLog(log);
+async function handleUntoggle(log: Log) {
+    await props.removeLog(log);
 }
 
-function handleToggleAll(date: Date, habitIds: string[]) {
+async function handleToggleAll(date: Date, habitIds: string[]) {
     for (const id of habitIds) {
-        handleToggle(date, id);
+        await handleToggle(date, id);
     }
 }
 
-function handleUntoggleAll(logs: Log[]) {
+async function handleUntoggleAll(logs: Log[]) {
     for (const log of logs) {
-        handleUntoggle(log);
+        await handleUntoggle(log);
     }
 }
 
@@ -54,17 +56,11 @@ function emitSelectDay(date: Date) {
             <div class="flex items-center gap-2 text-2xl font-bold">
                 <CalendarDays :size="24" />
 
-                <select
-                    v-model="type"
-                    class="bg-transparent font-bold cursor-pointer outline-none"
-                >
-                    <option value="week" class="bg-card-bg text-lg">
-                        This Week
-                    </option>
-                    <option value="month" class="bg-card-bg text-lg">
-                        This Month
-                    </option>
-                </select>
+                <SelectInput
+                    v-model:value="type"
+                    :border="false" 
+                    :options="[{ value: 'week', label: 'This Week' }, { value: 'month', label: 'This Month' }]"
+                />
             </div>
         </div>
 
@@ -83,6 +79,7 @@ function emitSelectDay(date: Date) {
         <div class="flex flex-col gap-4 ml-8">
             <HabitsTable
                 :habits="habits"
+                :logs="logs"
                 :type="type"
                 :current-date="today"
                 :today="today"

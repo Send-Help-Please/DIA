@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { List, Plus, X } from '@lucide/vue';
 import Section from '@/components/Section.vue';
-import HeaderText from '../components/HeaderText.vue';
+import HeaderText from '@/components/HeaderText.vue';
 import GuideText from '../components/GuideText.vue';
 import HabitsList from '../components/HabitsList.vue';
 import { ref } from 'vue';
@@ -9,20 +9,25 @@ import Button from '@/components/Button.vue';
 import { Habit } from '@/types/Habit.ts';
 import HabitForm from '../components/HabitForm.vue';
 import { validateNewHabitTitle } from '../validations/habitTitleValidation.ts';
+import { useToast } from '@/composables/useToast.ts';
 
 const props = defineProps<{
     habits: Habit[];
-    updateHabit: (habit: Habit) => void;
-    saveHabit: (habit: Omit<Habit, 'logs' | 'id'>) => void;
-    deleteHabit: (habit: Habit) => void;
+    updateHabit: (habit: Habit) => Promise<void>;
+    saveHabit: (habit: Omit<Habit, 'logs' | 'id'>) => Promise<void>;
+    deleteHabit: (habit: Habit) => Promise<void>;
 }>();
 
-const handleHabitUpdate = (habit: Habit) => {
-    props.updateHabit(habit);
+const toast = useToast();
+
+const handleHabitUpdate = async (habit: Habit) => {
+    await props.updateHabit(habit);
 };
 
-const handleHabitDelete = (habit: Habit) => {
-    props.deleteHabit(habit);
+const handleHabitDelete = async (habit: Habit) => {
+    await props.deleteHabit(habit);
+    console.log("habit deleted");
+    toast.info("Haha");
 };
 
 const creating = ref(false);
@@ -50,7 +55,7 @@ function validateTitle(title: string) {
 
         <Section class="rounded-md p-8 px-6 flex flex-col gap-4 bg-card-bg">
             <div class="flex justify-between items-center">
-                <HeaderText> <List /> Habit List </HeaderText>
+                <HeaderText class="flex items-center gap-2"> <List /> Habit List </HeaderText>
 
                 <Button
                     @click="creating ? cancelEdit() : startEdit()"

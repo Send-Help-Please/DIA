@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted } from 'vue';
 import { X } from '@lucide/vue';
 import Button from './Button.vue';
-import HeaderText from '@/modules/dashboard/components/HeaderText.vue';
+import HeaderText from './HeaderText.vue';
 
 defineProps<{
     open: boolean;

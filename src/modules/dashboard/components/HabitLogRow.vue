@@ -16,6 +16,7 @@ import { computed } from 'vue';
 const props = defineProps<{
     date: Date;
     habits: Habit[];
+    logs: Log[];
     progress: number;
     today: Date;
 }>();
@@ -29,7 +30,7 @@ const emit = defineEmits<{
 }>();
 
 const everyHabitIsDoneForDate = computed(() => {
-    return isEveryHabitDoneForDate(props.habits, props.date);
+    return isEveryHabitDoneForDate(props.habits, props.logs, props.date);
 });
 
 const isToday = computed(() => {
@@ -37,7 +38,7 @@ const isToday = computed(() => {
 });
 
 function toggleHabit(habit: Habit) {
-    const log = getLogForDate(habit, props.date);
+    const log = getLogForDate(habit, props.logs, props.date);
 
     if (log) {
         emit('untoggle', log);
@@ -49,12 +50,12 @@ function toggleHabit(habit: Habit) {
 
 function toggleAll() {
     if (everyHabitIsDoneForDate.value) {
-        emit('untoggleAll', getLogsForDate(props.habits, props.date));
+        emit('untoggleAll', getLogsForDate(props.habits, props.logs, props.date));
         return;
     }
 
     const missingHabitIds = props.habits
-        .filter((habit) => !hasLogForDate(habit, props.date))
+        .filter((habit) => !hasLogForDate(habit, props.logs, props.date))
         .map((habit) => habit.id);
 
     emit('toggleAll', props.date, missingHabitIds);
@@ -82,12 +83,12 @@ function toggleAll() {
             class="border-r border-card-border p-2"
         >
             <HabitCheckCell
-                :checked="hasLogForDate(habit, date)"
+                :checked="hasLogForDate(habit, props.logs, date)"
                 @toggle="toggleHabit(habit)"
             />
         </td>
 
-        <td class="border-r border-card-border p-2">
+        <td v-if="habits.length > 0" class="border-r border-card-border p-2">
             <HabitCheckCell
                 :checked="everyHabitIsDoneForDate"
                 @toggle="toggleAll"

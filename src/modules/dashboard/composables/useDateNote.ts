@@ -6,7 +6,7 @@ export function useDateNote(date: () => Date) {
     const notesStore = useNotesStore();
 
     const note = computed(() =>
-        notesStore.notes.find((note) => datesAreSame(note.date, date())),
+        notesStore.notes.find((note) => datesAreSame(note.noteDate, date()))
     );
 
     const draftNote = ref('');
@@ -24,21 +24,24 @@ export function useDateNote(date: () => Date) {
     watch(draftNote, (value) => {
         clearTimeout(timeout);
 
-        timeout = setTimeout(() => {
+        timeout = setTimeout(async () => {
             const trimmed = value.trim();
 
-            if (!trimmed && note.value) {
-                notesStore.removeNote(note.value);
+            const noteIsDeleted = !trimmed && note.value;
+            const noteIsEdited = trimmed && note.value;
+            const noteIsCreated = trimmed && !note.value;
+
+            if (noteIsDeleted) {
+                await notesStore.editNote({ ...note.value, note: "" });
                 return;
             }
 
-            if (!trimmed) return;
-
-            if (note.value) {
-                const newNote = { ...note.value, note: trimmed };
-                notesStore.editNote(newNote);
-            } else {
-                notesStore.addNote(date(), trimmed);
+            if (noteIsEdited) {
+                await notesStore.editNote({ ...note.value, note: trimmed });
+            }
+            
+            if (noteIsCreated) {
+                await notesStore.createNote({ note: trimmed, noteDate: date() });
             }
         }, 300);
     });

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import HabitProgressBar from '../components/HabitProgressBar.vue';
 import { useIconComponent } from '../composables/useIconComponent.ts';
-import HeaderText from '../components/HeaderText.vue';
+import HeaderText from '@/components/HeaderText.vue';
 import { Habit } from '@/types/Habit.ts';
 import { getFormattedDate, getWeekDay } from '../utils/dateUtils.ts';
 import { getProgressForDate } from '../utils/statUtils.ts';
@@ -14,9 +14,10 @@ import { useDateNote } from '../composables/useDateNote.ts';
 const props = defineProps<{
     day: Date;
     habits: Habit[];
+    logs: Log[];
     note?: Note;
-    addLog: (log: Omit<Log, 'id'>) => void;
-    removeLog: (log: Log) => void;
+    addLog: (log: Omit<Log, "id">) => Promise<void>;
+    removeLog: (log: Log) => Promise<void>;
 }>();
 
 defineEmits<{
@@ -25,15 +26,15 @@ defineEmits<{
 
 const { draftNote } = useDateNote(() => props.day);
 
-function toggleHabit(habit: Habit) {
-    const log = getLogForDate(habit, props.day);
+async function toggleHabit(habit: Habit) {
+    const log = getLogForDate(habit, props.logs, props.day);
 
     if (log) {
         props.removeLog(log);
         return;
     }
 
-    props.addLog({ date: props.day, habitId: habit.id });
+    await props.addLog({ habitId: habit.id, logDate: props.day });
 }
 </script>
 
@@ -52,7 +53,7 @@ function toggleHabit(habit: Habit) {
         <div class="mb-6">
             <p class="text-sm mb-2">Progress</p>
 
-            <HabitProgressBar :progress="getProgressForDate(day, habits)" />
+            <HabitProgressBar :progress="getProgressForDate(day, habits, logs)" />
         </div>
 
         <div class="mb-6">
@@ -72,7 +73,7 @@ function toggleHabit(habit: Habit) {
                     >
 
                     <HabitCheckCell
-                        :checked="hasLogForDate(habit, day)"
+                        :checked="hasLogForDate(habit, logs, day)"
                         @toggle="toggleHabit(habit)"
                     />
                 </label>

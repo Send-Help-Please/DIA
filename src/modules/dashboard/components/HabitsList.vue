@@ -19,7 +19,7 @@ function validateTitle(id: string, title: string) {
 </script>
 
 <template>
-    <ul class="list-disc ml-12">
+    <ul v-if="habits.length > 0" class="list-disc ml-12">
         <HabitItem
             v-for="habit in habits"
             :key="habit.id"
@@ -32,4 +32,5 @@ function validateTitle(id: string, title: string) {
             @delete-habit="emit('deleteHabit', $event)"
         />
     </ul>
+    <p class="opacity-70" v-else>Click '+' to create one.</p>
 </template>

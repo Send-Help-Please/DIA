@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import Section from '@/components/Section.vue';
 import { useHabitsStore } from '@/stores/useHabitsStore.ts';
 import Habits from './views/Habits.vue';
@@ -7,12 +7,16 @@ import Progress from './views/Progress.vue';
 import DayDetails from './views/DayDetails.vue';
 import { useNotesStore } from '@/stores/useNotesStore.ts';
 import { getNoteForDate } from './utils/noteUtils.ts';
+import { useLogsStore } from '@/stores/useLogsStore.ts';
 
 const habitsStore = useHabitsStore();
 const notesStore = useNotesStore();
+const logsStore = useLogsStore();
 
 const today = ref(new Date());
 const selectedDay = ref<Date | null>(null);
+
+const loading = ref(true);
 
 function handleSelectDay(date: Date) {
     selectedDay.value = date;
@@ -21,25 +25,42 @@ function handleSelectDay(date: Date) {
 function closeDayDetails() {
     selectedDay.value = null;
 }
+
+onMounted(async () => {
+    try{
+        await Promise.all([
+            habitsStore.loadHabits(),
+            logsStore.loadLogs(),
+            notesStore.loadNotes()
+        ]);
+    } catch(err) {
+        console.error(err);
+    } 
+    finally {
+        loading.value = false;
+    }
+});
 </script>
 
 <template>
-    <div>
+    <div v-if="loading">Loading...</div>
+    <div v-else>
         <Section class="grid grid-cols-4 gap-12 p-16">
             <Habits
                 class="col-span-1"
                 :habits="habitsStore.habits"
-                :update-habit="habitsStore.updateHabit"
-                :save-habit="habitsStore.addHabit"
-                :delete-habit="habitsStore.removeHabit"
+                :update-habit="habitsStore.editHabit"
+                :save-habit="habitsStore.createHabit"
+                :delete-habit="habitsStore.deleteHabit"
             />
 
             <Progress
                 class="col-span-3"
                 :habits="habitsStore.habits"
+                :logs="logsStore.logs"
                 :today="today"
-                :add-log="habitsStore.addLog"
-                :remove-log="habitsStore.removeLog"
+                :add-log="logsStore.createLog"
+                :remove-log="logsStore.deleteLog"
                 @select-day="handleSelectDay"
             />
         </Section>
@@ -58,9 +79,10 @@ function closeDayDetails() {
                 class="fixed top-0 right-0 h-screen w-[420px] z-50 shadow-2xl"
                 :day="selectedDay"
                 :habits="habitsStore.habits"
-                :add-log="habitsStore.addLog"
-                :remove-log="habitsStore.removeLog"
-                :note="getNoteForDate(today, notesStore.notes)"
+                :logs="logsStore.logs"
+                :add-log="logsStore.createLog"
+                :remove-log="logsStore.deleteLog"
+                :note="getNoteForDate(selectedDay, notesStore.notes)"
             />
         </Transition>
     </div>

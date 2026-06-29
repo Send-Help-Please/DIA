@@ -1,34 +1,38 @@
 import { Note } from '@/types/Note';
 import { defineStore } from 'pinia';
 import { ref } from 'vue';
-
-const generateId = () => {
-    return `note-${Math.floor(Math.random() * 10000)}`;
-};
+import { useProfileStore } from './useProfileStore';
+import { noteService } from '@/services/noteService';
 
 export const useNotesStore = defineStore('notes', () => {
     const notes = ref<Note[]>([]);
+    const loaded = ref<boolean>(false);
+    const profileId = useProfileStore().profileId;
 
-    const addNote = (date: Date, note: string) => {
-        notes.value.push({ id: generateId(), date, note });
-    };
+    const loadNotes = async () => {
+        if(loaded.value) return;
+        
+        notes.value = await noteService.listNotes({ profileId });
+    }
 
-    const editNote = (note: Note) => {
+    const createNote = async (note: Omit<Note, "id">) => {
+        const result = await noteService.createNote({ ...note, profileId });
+        notes.value.push(result);
+    }
+
+    const editNote = async (note: Note) => {
         const i = notes.value.findIndex((curr) => curr.id === note.id);
         if (i < 0) return;
 
-        notes.value[i] = note;
-    };
-
-    const removeNote = (note: Note) => {
-        notes.value = notes.value.filter((curr) => curr.id !== note.id);
-    };
+        const result = await noteService.editNote({ ...note, profileId, noteId: note.id });
+        notes.value[i] = result;
+    }
 
     return {
         notes,
 
-        addNote,
-        editNote,
-        removeNote,
+        loadNotes,
+        createNote,
+        editNote
     };
 });

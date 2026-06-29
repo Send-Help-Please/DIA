@@ -12,6 +12,7 @@ import { dateToKey } from '../utils/dateUtils.ts';
 
 const props = defineProps<{
     habits: Habit[];
+    logs: Log[];
     currentDate: Date;
     type: 'week' | 'month';
     today: Date;
@@ -27,6 +28,7 @@ const emit = defineEmits<{
 
 const { dates, averages, progresses } = useHabitLogTable(
     toRef(props, 'habits'),
+    toRef(props, 'logs'),
     toRef(props, 'currentDate'),
     toRef(props, 'type'),
 );
@@ -76,7 +78,7 @@ function emitSelectDay(date: Date) {
                     />
                 </HabitTableHeader>
 
-                <HabitTableHeader type="iconOnly">
+                <HabitTableHeader v-if="habits.length > 0" type="iconOnly">
                     <ListChecks :size="20" />
                 </HabitTableHeader>
             </tr>
@@ -88,6 +90,7 @@ function emitSelectDay(date: Date) {
                 :key="dateToKey(date)"
                 :date="date"
                 :habits="habits"
+                :logs="logs"
                 :progress="progresses[dateToKey(date)]"
                 :today="today"
                 @toggle="emitToggle"

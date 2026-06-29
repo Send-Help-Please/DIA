@@ -1,5 +1,9 @@
 export function dateToKey(date: Date): string {
-    return date.toISOString().slice(0, 10);
+    return date.toLocaleDateString(undefined, {
+        year: 'numeric',
+        month: 'long',
+        day: '2-digit',
+    });
 }
 
 export function getFormattedDate(date: Date): string {
@@ -15,7 +19,7 @@ export function getWeekDay(date: Date): string {
 }
 
 export function datesAreSame(date1: Date, date2: Date): boolean {
-    return dateToKey(new Date(date1)) === dateToKey(new Date(date2));
+    return dateToKey(date1) === dateToKey(date2);
 }
 
 export function getWeekDates(currentDate: Date): Date[] {

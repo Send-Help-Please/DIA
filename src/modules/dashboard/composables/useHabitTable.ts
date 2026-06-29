@@ -2,9 +2,11 @@ import { Habit } from '@/types/Habit';
 import { computed, Ref } from 'vue';
 import { dateToKey, getMonthDates, getWeekDates } from '../utils/dateUtils';
 import { getAverageForHabit, getProgressForDate } from '../utils/statUtils';
+import { Log } from '@/types/Log';
 
 export function useHabitLogTable(
     habits: Ref<Habit[]>,
+    logs: Ref<Log[]>,
     currentDate: Ref<Date>,
     type: Ref<'week' | 'month'>,
 ) {
@@ -18,7 +20,7 @@ export function useHabitLogTable(
         const result: Record<string, string> = {};
 
         for (const habit of habits.value) {
-            const avg = getAverageForHabit(dates.value, habit);
+            const avg = getAverageForHabit(dates.value, habit, logs.value);
             result[habit.id] = avg;
         }
 
@@ -29,7 +31,7 @@ export function useHabitLogTable(
         const result: Record<string, number> = {};
 
         for (const date of dates.value) {
-            const progress = getProgressForDate(date, habits.value);
+            const progress = getProgressForDate(date, habits.value, logs.value);
             result[dateToKey(date)] = progress;
         }
 

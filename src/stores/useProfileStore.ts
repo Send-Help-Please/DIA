@@ -1,20 +1,23 @@
+import { Profile } from '@/types/Profile';
 import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 
 export const useProfileStore = defineStore('profile', () => {
-    const id = ref<string>();
-    const displayName = ref<string>();
-    const timezone = ref<string>();
-    const weekStartsOn = ref<number>();
-    const createdAt = ref<Date>();
-    const updatedAt = ref<Date>();
+    const profile = ref<Profile>();
+
+    const profileId = computed(() => {
+        if(!profile.value?.id) { throw new Error("Profile id not set"); }
+        return profile.value.id;
+    });
+
+    const setProfile = (newProfile: Profile) => {
+        profile.value = newProfile;
+    }
 
     return {
-        id,
-        displayName,
-        timezone,
-        weekStartsOn,
-        createdAt,
-        updatedAt,
+        profile,
+        profileId,
+
+        setProfile
     };
 });
